@@ -10,15 +10,6 @@ import util.Util;
 
 public class PostController extends Controller {
 
-    private static Post postInstance;
-
-    public static Post getInstance() {
-        if (postInstance == null) {
-            postInstance = new Post();
-        }
-        return postInstance;
-    }
-
     public Result create() {
         JsonNode json = request().body().asJson();
         if (json == null) {
@@ -31,13 +22,12 @@ public class PostController extends Controller {
     }
 
     public Result retrieve(String id) {
-        this.getInstance().setId(id);
-        this.getInstance().query();
-        if (postInstance.getId().equals("")) {
+        Post post = new Post(id,null,null);
+        post.query();
+        if (post.getId().equals("")) {
             return notFound(Util.createResponse("Student with id:" + id + " not found", false));
         }
-        JsonNode jsonObjects = Json.toJson(postInstance);
+        JsonNode jsonObjects = Json.toJson(post);
         return ok(Util.createResponse(jsonObjects, true));
     }
 }
-
