@@ -1,0 +1,6 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+GET     /v1/posts/:id      controllers.PostController.retrieve(id:Int)
+POST    /v1/posts          controllers.PostController.create()
