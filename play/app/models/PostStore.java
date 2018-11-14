@@ -26,3 +26,4 @@ public class PostStore {
         return posts.get(id);
     }
 }
+
