@@ -26,9 +26,14 @@ public class Post {
     }
 
     public void query() {
+        if (!ObjectId.isValid(id)) {
+            this.setId("");
+            return;
+        }
+        ObjectId oid = new ObjectId(id);
         Post returned = datastore()
                 .createQuery(Post.class)
-                .field("_id").equal(id).get();
+                .field("_id").equal(oid).get();
         if (returned == null) {
             this.setId("");
             return;
