@@ -10,6 +10,8 @@ scalaVersion := "2.11.11"
 
 libraryDependencies ++= Seq( javaJdbc , cache , javaWs )
 
+libraryDependencies += "org.mongodb.morphia" % "morphia" % "1.3.2"
+
 libraryDependencies += "org.projectlombok" % "lombok" % "1.18.4"
 
 unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )

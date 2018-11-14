@@ -15,6 +15,7 @@ public class PostStore {
         }
         return instance;
     }
+
     public Post addPost(Post post) {
         int id = posts.size();
         post.setId(Integer.toString(id));
