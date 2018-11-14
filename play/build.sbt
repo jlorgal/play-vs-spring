@@ -12,6 +12,4 @@ libraryDependencies ++= Seq( javaJdbc , cache , javaWs )
 
 libraryDependencies += "org.projectlombok" % "lombok" % "1.18.4"
 
-unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )  
-
-      
+unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )
