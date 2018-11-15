@@ -22,18 +22,12 @@ public class Post {
     private String body;
 
     public void save() {
+        setId(new ObjectId().toString());
         datastore().save(this);
     }
 
     public void query() {
-        if (!ObjectId.isValid(id)) {
-            this.setId("");
-            return;
-        }
-        ObjectId oid = new ObjectId(id);
-        Post returned = datastore()
-                .createQuery(Post.class)
-                .field("_id").equal(oid).get();
+        Post returned = datastore().get(Post.class, id);
         if (returned == null) {
             this.setId("");
             return;

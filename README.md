@@ -1,5 +1,21 @@
 # play-vs-spring
-Comparing play framework and spring boot webflux.
+Comparing play framework (in java and scala) and spring webflux.
+
+This test implements an API REST with 2 endpoints:
+ - A POST resource to store a document in mongoDB.
+ - A GET resource to query a document from mongoDB.
+
+There is no tuning in any of the platforms. It was applied the default configuration.
+
+**Summary performance** (with `wrk -c 1000 -t 8`):
+
+| Framework | TPS (create) | TPS (get) |
+| --------- | ------------ | --------- |
+| Play java | 5224.71 | 5806.56 |
+| Play scala | 370.42 | 3405.79 |
+| Spring webflux | 6572.11 | 6528.66 |
+
+**NOTE**: The mongoDB connection pool is 10 connections in play, but 100 connections in spring. It makes sense that the connection pool is large because we are working with 1000 concurrent connections.
 
 # Test
 
@@ -18,6 +34,104 @@ curl http://localhost:8080/v1/posts/{id}
 ```
 
 # Performance comparison
+
+## Play java
+
+### Create a post
+
+```
+$ wrk -c 500 -t 4 -s post.lua -d 30s http://localhost:8080/v1/posts
+Running 30s test @ http://localhost:8080/v1/posts
+  4 threads and 500 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    72.93ms   33.54ms 571.29ms   72.52%
+    Req/Sec   842.67    306.72     1.96k    69.62%
+  100609 requests in 30.07s, 22.07MB read
+  Socket errors: connect 253, read 156, write 24, timeout 0
+Requests/sec:   3345.71
+Transfer/sec:    751.48KB
+
+$ wrk -c 500 -t 8 -s post.lua -d 30s http://localhost:8080/v1/posts
+Running 30s test @ http://localhost:8080/v1/posts
+  8 threads and 500 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    46.61ms   18.82ms 290.10ms   76.20%
+    Req/Sec   742.90    558.29     2.01k    46.00%
+  152735 requests in 30.10s, 33.50MB read
+  Socket errors: connect 253, read 168, write 76, timeout 0
+Requests/sec:   5074.83
+Transfer/sec:      1.11MB
+
+$ wrk -c 1000 -t 4 -s post.lua -d 30s http://localhost:8080/v1/posts
+Running 30s test @ http://localhost:8080/v1/posts
+  4 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    50.95ms   20.73ms 245.63ms   76.38%
+    Req/Sec     1.21k     1.10k    3.13k    70.18%
+  143870 requests in 30.07s, 31.56MB read
+  Socket errors: connect 753, read 153, write 30, timeout 0
+Requests/sec:   4783.94
+Transfer/sec:      1.05MB
+
+$ wrk -c 1000 -t 8 -s post.lua -d 30s http://localhost:8080/v1/posts
+Running 30s test @ http://localhost:8080/v1/posts
+  8 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    46.36ms   17.29ms 214.93ms   74.50%
+    Req/Sec     0.88k   656.59     2.56k    66.83%
+  157035 requests in 30.06s, 34.44MB read
+  Socket errors: connect 757, read 106, write 39, timeout 0
+Requests/sec:   5224.71
+Transfer/sec:      1.15MB
+```
+
+### Get a post
+
+```
+$ wrk -c 500 -t 4 -d 30s http://localhost:8080/v1/posts/5bed4bcaa4b79e101884c441
+Running 30s test @ http://localhost:8080/v1/posts/5bed4bcaa4b79e101884c441
+  4 threads and 500 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    68.76ms   54.27ms   1.27s    97.33%
+    Req/Sec     0.94k   527.61     1.88k    59.87%
+  111219 requests in 30.07s, 24.93MB read
+  Socket errors: connect 253, read 171, write 5, timeout 0
+Requests/sec:   3699.28
+Transfer/sec:    848.95KB
+
+$ wrk -c 500 -t 8 -d 30s http://localhost:8080/v1/posts/5bed4bcaa4b79e101884c441
+Running 30s test @ http://localhost:8080/v1/posts/5bed4bcaa4b79e101884c441
+  8 threads and 500 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    42.40ms   16.85ms 550.21ms   91.80%
+    Req/Sec     1.15k   468.72     3.78k    73.69%
+  170808 requests in 30.08s, 38.28MB read
+  Socket errors: connect 253, read 201, write 8, timeout 0
+Requests/sec:   5678.62
+Transfer/sec:      1.27MB
+
+$ wrk -c 1000 -t 4 -d 30s http://localhost:8080/v1/posts/5bed4bcaa4b79e101884c441
+Running 30s test @ http://localhost:8080/v1/posts/5bed4bcaa4b79e101884c441
+  4 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    44.94ms   17.33ms 726.64ms   88.98%
+    Req/Sec     1.37k     1.19k    3.21k    49.83%
+  162444 requests in 30.10s, 36.41MB read
+  Socket errors: connect 753, read 201, write 50, timeout 0
+Requests/sec:   5396.70
+Transfer/sec:      1.21MB
+
+$ wrk -c 1000 -t 8 -d 30s http://localhost:8080/v1/posts/5bed4bcaa4b79e101884c441
+Running 30s test @ http://localhost:8080/v1/posts/5bed4bcaa4b79e101884c441
+  8 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    41.15ms   15.73ms 693.29ms   90.35%
+    Req/Sec     1.18k     1.28k    3.33k    67.05%
+  174729 requests in 30.09s, 39.16MB read
+  Socket errors: connect 757, read 206, write 12, timeout 0
+Requests/sec:   5806.56
+Transfer/sec:      1.30MB
+```
 
 ## Play scala
 
@@ -67,7 +181,11 @@ Running 30s test @ http://localhost:8080/v1/posts
   Socket errors: connect 757, read 279, write 37, timeout 2
 Requests/sec:    370.42
 Transfer/sec:    161.70KB
+```
 
+### Get a post
+
+```
 $ wrk -c 500 -t 4 -d 30s http://localhost:8080/v1/posts/5bed38b1170000f186279824
 Running 30s test @ http://localhost:8080/v1/posts/5bed38b1170000f186279824
   4 threads and 500 connections
@@ -100,9 +218,20 @@ Running 30s test @ http://localhost:8080/v1/posts/5bed38b1170000f186279824
   Socket errors: connect 753, read 178, write 6, timeout 0
 Requests/sec:   3779.66
 Transfer/sec:      1.61MB
+
+$ wrk -c 1000 -t 8 -d 30s http://localhost:8080/v1/posts/5bed505d10000034e3ea8294
+Running 30s test @ http://localhost:8080/v1/posts/5bed505d10000034e3ea8294
+  8 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    68.56ms   53.77ms   1.98s    90.02%
+    Req/Sec   442.68    528.11     1.98k    77.00%
+  102479 requests in 30.09s, 44.66MB read
+  Socket errors: connect 757, read 320, write 7, timeout 7
+Requests/sec:   3405.79
+Transfer/sec:      1.48MB
 ```
 
-## Spring boot
+## Spring webflux
 
 ### Create a post
 
