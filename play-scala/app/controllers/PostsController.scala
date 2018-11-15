@@ -5,9 +5,10 @@ import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
 import play.api.Logger
-import play.api.mvc.{ AbstractController, ControllerComponents }
+import play.api.mvc._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import play.api.libs.json.Reads._
 
 // Reactive Mongo imports
 import reactivemongo.api.{ Cursor, ReadPreference }
@@ -21,47 +22,27 @@ import play.modules.reactivemongo.{ // ReactiveMongo Play2 plugin
   ReactiveMongoComponents
 }
 
+import repositories._
+import model._
 
-class PostsController @Inject()(components: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi)
-  extends AbstractController(components) with MongoController with ReactiveMongoComponents {
-
-    def collection: Future[JSONCollection] = database.map(_.collection[JSONCollection]("posts"))
+class PostsController @Inject()(components: ControllerComponents, postsRepository: PostsRepository)
+  extends AbstractController(components) {
 
     implicit def ec: ExecutionContext = components.executionContext
 
-    def create() = Action.async {
-      val json = Json.obj(
-        "title" -> "play-scala",
-        "body" -> "test with play scala"
-      )
-      collection.flatMap(_.insert(json))
-        .map(lastError => Ok("Mongo LastError: %s".format(lastError)))
+    def create() = Action.async(parse.json) { implicit request =>
+      request.body match {
+        case body: JsValue => body match {
+          case post: JsObject => postsRepository.create(post).map(createdPost => Ok(createdPost))
+          case _ => Future.successful(BadRequest("Invalid request"))
+        }
+        case _ => Future.successful(BadRequest("Invalid request"))
+      }
     }
 
-    def get(id: BSONObjectID) = Action.async {
-      val selector = Json.obj("_id" -> id)
-      collection.flatMap(_.find(selector).one[JsObject])
+    def get(id: String) = Action.async {
+      postsRepository.get(id)
         .map(post => Ok(Json.toJson(post)))
     }
 
 }
-
-
-
-// class PostsController @Inject()(postsRepository: PostsRepository) extends Controller {
-
-//   private val logger = Logger(getClass)
-
-//   def create() = Action { request =>
-//     logger.trace(s"create")
-//     postsRepository.save(BSONDocument(
-//       "title" -> "play-scala",
-//       "body" -> "test with play scala"
-//     )).map(lastError => Ok("Mongo LastError: %s".format(lastError)))
-//   }
-
-//   def get(id: String) = Action.async { request =>
-//     logger.trace(s"show: id = $id")
-//     postsRepository.get(BSONDocument("_id" -> BSONObjectID(id))).map(widget => Ok(Json.toJson(widget)))
-//   }
-// }

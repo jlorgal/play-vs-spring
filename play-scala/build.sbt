@@ -11,9 +11,6 @@ libraryDependencies += guice
 libraryDependencies += "org.reactivemongo" %% "play2-reactivemongo" % "0.16.0-play26"
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
 
-import play.sbt.routes.RoutesKeys
-RoutesKeys.routesImport += "play.modules.reactivemongo.PathBindables._"
-
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.elevenpaths.playvsspring.scala.controllers._"
 
