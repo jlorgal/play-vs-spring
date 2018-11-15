@@ -9,7 +9,7 @@ public class Util {
             Object response, boolean ok) {
 
         ObjectNode result = Json.newObject();
-        result.put("isSuccessfull", ok);
+        result.put("isSuccessful", ok);
         if (response instanceof String) {
             result.put("body", (String) response);
         }
