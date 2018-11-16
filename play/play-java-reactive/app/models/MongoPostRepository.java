@@ -1,6 +1,10 @@
 package models;
 
 import com.mongodb.ConnectionString;
+import com.mongodb.ServerAddress;
+import com.mongodb.async.client.MongoClientSettings;
+import com.mongodb.connection.ClusterSettings;
+import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.reactivestreams.client.*;
 
 import org.bson.Document;
@@ -19,8 +23,22 @@ public class MongoPostRepository implements PostRepository {
     private MongoCollection<Document> mongoCollection;
 
     MongoPostRepository() {
-        mongoClient =  MongoClients.create(new ConnectionString("mongodb://192.168.99.100:27017"));
+        // or provide custom MongoClientSettings
+        ClusterSettings clusterSettings = ClusterSettings.builder().hosts(java.util.Arrays.asList(new ServerAddress("192.168.99.100"))).build();
+
+        com.mongodb.connection.ConnectionPoolSettings.Builder poolBuilder = com.mongodb.connection.ConnectionPoolSettings.builder();
+        poolBuilder.maxSize(100);
+        poolBuilder.minSize(100);
+        ConnectionPoolSettings poolSettings = poolBuilder.build();
+
+        MongoClientSettings.Builder mongoSettingsBuilder = MongoClientSettings.builder();
+        mongoSettingsBuilder.connectionPoolSettings(poolSettings);
+
+        MongoClientSettings mongoClientSettings = mongoSettingsBuilder.clusterSettings(clusterSettings).build();
+        MongoClient mongoClient = MongoClients.create(mongoClientSettings);
+
         mongoDatabase = mongoClient.getDatabase("play-java-reactive");
+        //mongoClient =  MongoClients.create(new ConnectionString("mongodb://192.168.99.100:27017"));
 
         try {
             subscribeAndAwait(mongoDatabase.createCollection("posts"));
