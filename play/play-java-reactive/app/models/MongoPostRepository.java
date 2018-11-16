@@ -1,14 +1,10 @@
 package models;
 
 import com.mongodb.ConnectionString;
-import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.reactivestreams.client.*;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-
-import org.reactivestreams.Publisher;
-import play.libs.Json;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
