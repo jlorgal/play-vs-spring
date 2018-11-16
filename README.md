@@ -102,7 +102,7 @@ curl http://localhost:8080/v1/posts/{id}
 
 # Performance comparison
 
-## Play java
+## Play java (non reactive approach)
 
 ### Create a post
 
@@ -200,7 +200,7 @@ Requests/sec:   5567.71
 Transfer/sec:      1.24MB
 ```
 
-## Play java
+## Play java (reactive approach)
 
 ### Create a post
 
