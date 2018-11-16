@@ -1,4 +1,4 @@
-# play-vs-spring
+# Play vs Spring Webflux vs Django
 Comparing play framework (in java and scala) and spring webflux.
 
 This test implements an API REST with 2 endpoints:
@@ -14,8 +14,45 @@ There is no tuning in any of the platforms except setting up the mongoDB connect
 | Play java | 5100.54 | 5567.71 |
 | Play scala | 453.86 | 3353.32 |
 | Spring webflux | 6572.11 | 6528.66 |
+| Python Django | 152.27 | 149.61 |
 
 **NOTE**: By default, spring opens 100 connections during the load test, while play scenarios only open 10 connections with the default configuration. After setting up the pool to 100 connections (for a fair comparison), there is a minor difference. It looks like the pool size is not really relevant for the final results.
+
+**NOTE**: Python Django only uses a CPU core (about 100% CPU consumption) while other alternatives are multithreaded and reach up to 300% CPU (with average 270%).
+
+# Running examples
+
+## Play Java
+
+```
+cd play/play-java
+sbt stage
+target/universal/stage/bin/play -Dhttp.port=8080 -Dplay.http.secret.key='dfaadfasd'
+```
+
+## Play Scala
+
+```
+cd play/play-scala
+sbt stage
+target/universal/stage/bin/play-scala -Dhttp.port=8080 -Dplay.http.secret.key='dfaadfasd'
+```
+
+## Spring webflux
+
+```
+cd spring
+mvn install
+java -jar target/spring-0.0.1-SNAPSHOT.jar
+```
+
+## Python Django
+
+```
+pip install django djangorestframework mongoengine django-rest-framework-mongoengine
+cd django
+python manage.py runserver 8080
+```
 
 # Test
 
@@ -327,4 +364,102 @@ Running 30s test @ http://localhost:8080/v1/posts/5bec10f83a395113af848871
   Socket errors: connect 757, read 10, write 0, timeout 0
 Requests/sec:   6528.66
 Transfer/sec:      1.03MB
+```
+
+## Python Django
+
+### Create a post
+
+```
+$ wrk -c 500 -t 4 -s post.lua -d 30s http://localhost:8080/v1/posts/
+Running 30s test @ http://localhost:8080/v1/posts/
+  4 threads and 500 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    79.42ms   37.51ms 501.98ms   93.02%
+    Req/Sec    42.34     21.86   130.00     61.84%
+  4942 requests in 30.10s, 1.44MB read
+  Socket errors: connect 253, read 5882, write 242, timeout 0
+Requests/sec:    164.19
+Transfer/sec:     49.07KB
+
+$ wrk -c 500 -t 8 -s post.lua -d 30s http://localhost:8080/v1/posts/
+Running 30s test @ http://localhost:8080/v1/posts/
+  8 threads and 500 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    93.82ms   54.96ms 479.91ms   91.18%
+    Req/Sec    33.88     22.75   131.00     62.56%
+  4579 requests in 30.10s, 1.34MB read
+  Socket errors: connect 253, read 5504, write 258, timeout 0
+Requests/sec:    152.13
+Transfer/sec:     45.47KB
+
+$ wrk -c 1000 -t 4 -s post.lua -d 30s http://localhost:8080/v1/posts/
+Running 30s test @ http://localhost:8080/v1/posts/
+  4 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   119.68ms   93.55ms 706.14ms   90.12%
+    Req/Sec    38.34     24.23   200.00     69.69%
+  4342 requests in 30.05s, 1.27MB read
+  Socket errors: connect 753, read 5261, write 327, timeout 0
+Requests/sec:    144.47
+Transfer/sec:     43.17KB
+
+$ wrk -c 1000 -t 8 -s post.lua -d 30s http://localhost:8080/v1/posts/
+Running 30s test @ http://localhost:8080/v1/posts/
+  8 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   102.64ms   66.73ms 585.40ms   88.83%
+    Req/Sec    50.07     39.44   430.00     68.92%
+  4583 requests in 30.10s, 1.34MB read
+  Socket errors: connect 757, read 5445, write 320, timeout 0
+Requests/sec:    152.27
+Transfer/sec:     45.51KB
+```
+
+### Get a post
+
+```
+$ wrk -c 500 -t 4 -d 30s http://localhost:8080/v1/posts/5beebd52fa77d52dc486d903/
+Running 30s test @ http://localhost:8080/v1/posts/5beebd52fa77d52dc486d903/
+  4 threads and 500 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    85.87ms   42.52ms 532.99ms   92.26%
+    Req/Sec    41.51     23.77   210.00     70.97%
+  4830 requests in 30.10s, 1.50MB read
+  Socket errors: connect 253, read 5701, write 242, timeout 0
+Requests/sec:    160.46
+Transfer/sec:     50.93KB
+
+$ wrk -c 500 -t 8 -d 30s http://localhost:8080/v1/posts/5beebd52fa77d52dc486d903/
+Running 30s test @ http://localhost:8080/v1/posts/5beebd52fa77d52dc486d903/
+  8 threads and 500 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   144.49ms  129.35ms 990.10ms   89.73%
+    Req/Sec    26.68     22.90   242.00     81.20%
+  4285 requests in 30.09s, 1.33MB read
+  Socket errors: connect 253, read 5391, write 332, timeout 0
+Requests/sec:    142.41
+Transfer/sec:     45.20KB
+
+$ wrk -c 1000 -t 4 -d 30s http://localhost:8080/v1/posts/5beebd52fa77d52dc486d903/
+Running 30s test @ http://localhost:8080/v1/posts/5beebd52fa77d52dc486d903/
+  4 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   104.24ms   80.80ms 878.07ms   91.17%
+    Req/Sec    40.74     26.22   198.00     71.06%
+  4665 requests in 30.03s, 1.45MB read
+  Socket errors: connect 753, read 5691, write 307, timeout 0
+Requests/sec:    155.34
+Transfer/sec:     49.30KB
+
+$ wrk -c 1000 -t 8 -d 30s http://localhost:8080/v1/posts/5beebd52fa77d52dc486d903/
+Running 30s test @ http://localhost:8080/v1/posts/5beebd52fa77d52dc486d903/
+  8 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   512.83ms  453.49ms   1.93s    75.79%
+    Req/Sec    39.76     28.70   300.00     72.93%
+  4503 requests in 30.10s, 1.40MB read
+  Socket errors: connect 757, read 7529, write 168, timeout 5
+Requests/sec:    149.61
+Transfer/sec:     47.49KB
 ```
