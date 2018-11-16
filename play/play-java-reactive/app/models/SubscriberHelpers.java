@@ -69,7 +69,7 @@ public final class SubscriberHelpers {
         }
 
         public ObservableSubscriber(final boolean printResults) {
-            this.printResults = printResults;
+            this.printResults = false;
             this.latch = new CountDownLatch(1);
         }
 
