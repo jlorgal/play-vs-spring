@@ -1,5 +1,5 @@
 # Play vs Spring Webflux vs Django vs Golang
-Comparing play framework (in java and scala) and spring webflux.
+Comparing play framework (in java and scala), spring webflux, python Django, and golang.
 
 This test implements an API REST with 2 endpoints:
  - A POST resource to store a document in mongoDB.
@@ -20,7 +20,7 @@ There is no tuning in any of the platforms except setting up the mongoDB connect
 
 **NOTE**: By default, spring opens 100 connections during the load test, while play scenarios only open 10 connections with the default configuration. After setting up the pool to 100 connections (for a fair comparison), there is a minor difference. It looks like the pool size is not really relevant for the final results.
 
-**NOTE**: Python Django only uses a CPU core (about 100% CPU consumption) while Java/Scala alternatives are multithreaded and reach up to 300% CPU (with average 270%).
+**NOTE**: Python Django only uses a CPU core (about 100% CPU consumption) while Java/Scala alternatives are multithreaded and reach up to 300% CPU (with average 270%). Golang approach is multithreaded and it gets best performance without exceeding 200% CPU.
 
 # Conclusions
 
