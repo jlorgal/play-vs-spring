@@ -1,0 +1,5 @@
+marshmallow==2.15.3
+uvloop==0.10.1
+aiohttp==3.2.1
+aiotask_context==0.5.0
+motor==2.3.0
